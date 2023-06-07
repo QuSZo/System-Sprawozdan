@@ -43,4 +43,5 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ITReportHttpService, TReportHttpService>();
 builder.Services.AddScoped<ISReportHttpService, SReportHttpService>();
 
+
 await builder.Build().RunAsync();
