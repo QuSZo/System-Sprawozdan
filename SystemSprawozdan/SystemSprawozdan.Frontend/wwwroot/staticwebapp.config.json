@@ -1,6 +1,6 @@
 {
   "navigationFallback": {
-    "rewrite": "/dupa.html",
+    "rewrite": "/index.html",
     "exclude": [ "/_framework/*", "/css/*" ]
   }
 }
