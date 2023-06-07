@@ -56,4 +56,3 @@ jobs:
           app-name: 'systemsprawozdan'
           slot-name: 'Production'
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_F7B88282EF2D4737BD2B8B3E4343180F }}
-          package: .
