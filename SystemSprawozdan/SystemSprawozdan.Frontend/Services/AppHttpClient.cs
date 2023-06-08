@@ -37,7 +37,7 @@ namespace SystemSprawozdan.Frontend.Services
         {
             interceptor.RegisterEvent();
             _httpClient = httpClient;
-            _httpClient.BaseAddress = new Uri("https://orange-desert-01baec003.3.azurestaticapps.net/api/");
+            _httpClient.BaseAddress = new Uri("https://systemsprawozdan.azurewebsites.net/api/");
             _js = js;
             _toaster = toaster;
         }
