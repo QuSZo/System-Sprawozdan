@@ -14,7 +14,7 @@ jobs:
     runs-on: windows-latest
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v2
 
       - name: Set up .NET Core
         uses: actions/setup-dotnet@v1
@@ -23,11 +23,9 @@ jobs:
           include-prerelease: true
 
       - name: Build with dotnet
-        working-directory: SystemSprawozdan/SystemSprawozdan.Backend
         run: dotnet build --configuration Release
 
       - name: dotnet publish
-        working-directory: SystemSprawozdan/SystemSprawozdan.Backend
         run: dotnet publish -c Release -o ${{env.DOTNET_ROOT}}/myapp
 
       - name: Upload artifact for deployment job
@@ -55,4 +53,5 @@ jobs:
         with:
           app-name: 'systemsprawozdan'
           slot-name: 'Production'
-          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_F7B88282EF2D4737BD2B8B3E4343180F }}
+          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_4DAAE6249A88410293B37838B5794DC7 }}
+          package: .
