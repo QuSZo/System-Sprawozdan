@@ -18,8 +18,9 @@ namespace SystemSprawozdan.Frontend.Services
         public Task<string> Post<TBody>(string url, TBody body, HttpParameter parameter);
         public Task<string> Post<TBody>(string url, TBody body, List<HttpParameter>? parameters = null);
         public Task<string> Put<TBody>(string url, TBody body, HttpParameter parameter);
-
         public Task<string> Put<TBody>(string url, TBody body, List<HttpParameter>? parameters = null);
+        public Task<string> Delete(string url, HttpParameter? parameter);
+        public Task<string> Delete(string url, List<HttpParameter>? parameters = null);
         public Task DownloadFile(string url, string fileName = "report");
         public Task UploadFiles(string url, List<IBrowserFile> files);
         public T? SerializeStringToObject<T>(string json);
@@ -37,7 +38,7 @@ namespace SystemSprawozdan.Frontend.Services
         {
             interceptor.RegisterEvent();
             _httpClient = httpClient;
-            _httpClient.BaseAddress = new Uri("https://systemsprawozdan.azurewebsites.net/api/");
+            _httpClient.BaseAddress = new Uri("https://localhost:7184/api/");
             _js = js;
             _toaster = toaster;
         }
@@ -97,6 +98,20 @@ namespace SystemSprawozdan.Frontend.Services
             url = AddParamsToUrl(url, parameters);
             using var response = await _httpClient.PutAsJsonAsync(url, body);
             
+            return await response.Content.ReadAsStringAsync();
+        }
+
+        public async Task<string> Delete(string url, HttpParameter? parameter)
+        {
+            var parameters = new List<HttpParameter>();
+            parameters.Add(parameter);
+            return await Delete(url, parameters);
+        }
+        public async Task<string> Delete(string url, List<HttpParameter>? parameters = null)
+        {
+            url = AddParamsToUrl(url, parameters);
+            using var response = await _httpClient.DeleteAsync(url);
+
             return await response.Content.ReadAsStringAsync();
         }
 

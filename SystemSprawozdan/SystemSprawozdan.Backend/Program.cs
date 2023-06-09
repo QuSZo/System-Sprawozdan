@@ -45,7 +45,6 @@ builder.Services
     });
 #endregion
 
-
 // Add services to the container.
 builder.Services.AddEntityFrameworkNpgsql().AddDbContext<ApiDbContext>(opt => opt.UseNpgsql(connectionString));
 
