@@ -3,8 +3,17 @@
 @inject IAppHttpClient AppHttpClient
 @inject IMatToaster Toaster
 @inject NavigationManager NavigationManager
-<TitleBar Text="@Title"></TitleBar>
-<MatTable Striped="true" Items="@students" class="mat-elevation-z5" ShowPaging="false">
+
+<PageTitle>Szczególy grupy</PageTitle>
+<TitleBar Text="@Title"/>
+
+<div>
+    <TabBar TValue="bool" @bind-Value="@isStudent" Data="@TabBarData" FlexDirection="row" />
+</div>
+@if (isStudent)
+{
+       
+<MatTable Striped="true" Items="@students" ShowPaging="false">
     <MatTableHeader>
         <th class="table-header">Nr albumu</th>
         <th class="table-header">Imię</th>
@@ -19,7 +28,7 @@
             <MatButton Outlined="true" OnClick="@(e => { studentToDelete = context.Id; studentName = context.Name; studentSurname = context.Surname; dialogIsOpen = true;  })">
                 <MatIcon Icon="@MatIconNames.Delete_forever"></MatIcon>
             </MatButton>
-            <MatButton Raised="true" OnClick="@(e => { NavigationManager.NavigateTo($"/teacher/view-students/{GroupId}"); })"><!--Placeholder url-->
+                <MatButton Raised="true" OnClick="@(() => MoveToStudent(context.Id))">
                 <MatIcon Icon="@MatIconNames.Arrow_forward"></MatIcon>
             </MatButton>
         </td>
@@ -35,15 +44,56 @@
         <MatButton Outlined="true" OnClick="@DeleteStudent">Tak</MatButton>
         <MatButton Outlined="true" OnClick="@(e => { dialogIsOpen = false; })">Nie</MatButton>
     </MatDialogActions>
-</MatDialog>
+    </MatDialog>
+}
+else
+{
+    <MatTable Striped="true" Items="@reportTopics" ShowPaging="false">
+        <MatTableHeader>
+            <th class="table-header-report">Zadanie</th>
+            <th class="table-header-report">Termin oddania</th>
+            <th class="table-header-report">
+                <MatButton Raised="true" OnClick="@(e => { reportName = null; reportDeadline = DateTime.MinValue; reportTopicDialogIsOpen = true;  })">
+                    Dodaj sprawozdanie
+                </MatButton>
+            </th>
+        </MatTableHeader>
+        <MatTableRow>
+            <td>@context.ReportTopicName</td>
+            <td>@context.ReportTopicDeadline</td>
+            <td>
+                <MatButton style="align-self:flex-end;" Raised="true" OnClick="@(e => { NavigationManager.NavigateTo($"/teacher/reports/{context.Id}"); })">
+                    <MatIcon Icon="@MatIconNames.Arrow_forward"></MatIcon>
+                </MatButton>
+            </td>
+        </MatTableRow>
+    </MatTable>
+    <MatDialog @bind-IsOpen="@reportTopicDialogIsOpen">
+        <MatDialogTitle>Podaj szczegóły</MatDialogTitle>
+        <MatDialogContent>
+            <br>
+            <MatTextField @bind-Value="@reportName" Required="true" Label="Nazwa zadania" Outlined="true"></MatTextField><br><br>
+            <MatDatePicker @bind-Value="@reportDeadline" Label="Termin oddania" Required="true" Outlined="true"></MatDatePicker>
+        </MatDialogContent>
+        <MatDialogActions>
+            <MatButton Outlined="true" OnClick="@AddReportTopic">Dodaj sprawozdanie</MatButton>
+            <MatButton Outlined="true" OnClick="@(e => { reportTopicDialogIsOpen = false; })">Anuluj</MatButton>
+        </MatDialogActions>
+    </MatDialog>
+}
+
 
 @code {
     [Parameter]
     public int GroupId { get; set; }
     public int? studentToDelete = null;
     public string? studentName, studentSurname;
+    public string? reportName;
+    public DateTime reportDeadline { get; set; } = DateTime.MinValue;
 
+    bool isStudent = true;
     bool dialogIsOpen = false;
+    bool reportTopicDialogIsOpen = false;
     async void DeleteStudent()
     {
         if(studentToDelete == 0 || studentToDelete == null)
@@ -53,14 +103,40 @@
         else
         {
             await AppHttpClient.Delete($"SubjectGroup/{GroupId}/RemoveStudentFromGroup/{studentToDelete}");
-            
-            dialogIsOpen = false;
+
             NavigationManager.NavigateTo($"/teacher/view-students/{GroupId}");
             Toaster.Add("Student został usunięty z grupy", MatToastType.Success, "Sukces");
+
+            dialogIsOpen = false;
+            StateHasChanged();
         }
+    }
+    async void AddReportTopic()
+    {
+        var newReportTopic = new ReportTopicPostDto()
+            {
+                Name = reportName,
+                Deadline = reportDeadline,
+                GroupId = GroupId
+            };
+
+
+        await AppHttpClient.Post("ReportTopic/AddTopic", newReportTopic);
+        NavigationManager.NavigateTo($"/teacher/view-students/{GroupId}");
+        Toaster.Add("Dodano sprawozdanie", MatToastType.Success, "Sukces");
+
+        reportTopicDialogIsOpen = false;
+        StateHasChanged();
+    }
+
+    async void MoveToStudent(int studentId)
+    {
+        var subjectId = await AppHttpClient.Get<int>($"SubjectGroup/{GroupId}/GetSubjectId");
+        NavigationManager.NavigateTo($"/teacher/view-students/{studentId}/{subjectId}");
     }
 
     List<StudentBasicGetDto> students = new();
+    List<ReportTopicGetDto> reportTopics = new();
     SubjectGroupGetDetailsDto SubjectGroup;
     public string? Title;
     protected override async Task OnInitializedAsync()
@@ -69,5 +145,21 @@
 
         SubjectGroup = await AppHttpClient.Get<SubjectGroupGetDetailsDto>($"SubjectGroup/{GroupId}/GetSubjectGroupDetails");
         Title = SubjectGroup.SubjectName + "/" + SubjectGroup.Name;
+
+        reportTopics = await AppHttpClient.Get<List<ReportTopicGetDto>>($"ReportTopic/{GroupId}/GetTopicsForGroup");
     }
+
+    public IEnumerable<TabBarData<bool>> TabBarData { get; set; } = new TabBarData<bool>[]
+    {
+        new()
+        {
+            Text = "Studenci",
+            Value = true
+        },
+        new()
+        {
+            Text = "Sprawozdania",
+            Value = false
+        },
+    };
 }
